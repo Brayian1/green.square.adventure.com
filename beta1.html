@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Пиксельная игра - Приключения квадрата</title>
+</head>
+<body>
+  <!-- Основной контейнер -->
+  <div class="game-container">
+    <h1>Приключения квадрата</h1>
+
+    <!-- Панель опыта (на главном экране) -->
+    <div class="exp-container" id="expContainerStart">
+      <div class="exp-info">
+        <span>Ранг: <strong id="rankLevelStart">1</strong></strong></span>
+        <span><span id="currentExpStart">0</span>/<span id="requiredExpStart">100</span> опыта</span>
+      </div>
+      <div class="exp-bar-outer">
+        <div class="exp-bar-inner" id="expBarStart"></div>
+        <div class="exp-glow"></div>
+      </div>
+    </div>
+
+    <!-- Монеты -->
+    <p>Монеты: <strong id="totalCoins">0</strong></p>
+
+    <!-- Кнопки меню -->
+    <div class="menu-buttons">
+      <div class="menu-row">
+        <button class="start-btn" onclick="startGame()">Начать игру</button>
+        <button class="difficulty-btn" onclick="showDifficultyScreen()">Сложность</button>
+      </div>
+      <div class="menu-row">
+        <button class="square-btn glory-btn" onclick="showGloryRoad()">🏆</button>
+        <button class="square-btn" onclick="showShop()">🛒</button>
+        <button class="square-btn reset-btn" onclick="showResetScreen()">
+          🔁
+          <span id="resetBadge" class="reset-badge">0</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Экран выбора сложности -->
+  <div id="difficultyScreen" class="difficulty-screen" style="display: none;">
+    <h2>Выберите сложность</h2>
+    <div class="menu-row">
+      <button class="difficulty-btn active" onclick="setDifficulty('easy')">Легко</button>
+      <button class="difficulty-btn" onclick="setDifficulty('normal')">Средне</button>
+      <button class="difficulty-btn" onclick="setDifficulty('hard')">Сложно</button>
+    </div>
+    <button class="back-to-main-btn" onclick="saveAndReturnToMain()">Назад</button>
+  </div>
+
+  <!-- Экран игры -->
+  <div id="gameScreen" class="game-screen" style="display: none;">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div class="controls">WASD / Стрелки — движение, Q — волна, E — магнит</div>
+    <p>Уровень: <strong id="level">1</strong> | Жизни: <strong id="lives">10</strong> | Счёт: <strong id="score">0</strong></p>
+    <p>Перезарядка волны: <strong id="waveCooldown">Готова</strong> | Магнит: <strong id="magnetCooldown">Готов</strong></p>
+    <button class="pause-btn" onclick="togglePause()">Пауза</button>
+  </div>
+
+  <!-- Экран паузы -->
+  <div id="pauseScreen" class="pause-screen" style="display: none;">
+    <h2>Пауза</h2>
+    <button onclick="hidePauseScreen()">Продолжить</button>
+    <button onclick="restartGame()">Заново</button>
+    <button onclick="saveAndReturnToMain()">В меню</button>
+  </div>
+
+  <!-- Экран завершения уровня -->
+  <div id="levelComplete" class="level-complete" style="display: none;">
+    <h2 id="levelCompleteText">Уровень пройден!</h2>
+    <button onclick="nextLevel()">Следующий уровень</button>
+    <button onclick="restartGame()">Повторить</button>
+  </div>
+
+  <!-- Экран поражения -->
+  <div id="gameOver" class="game-over" style="display: none;">
+    <h2>Игра окончена</h2>
+    <p id="finalScore">Вы проиграли на уровне X. Собрано X монет.</p>
+    <button onclick="restartGame()">Попробовать снова</button>
+  </div>
+
+  <!-- Экран победы -->
+  <div id="winScreen" class="win-screen" style="display: none;">
+    <h2 id="winText">🎉 Победа! Все уровни пройдены!</h2>
+    <p>Вы собрали <strong id="finalWinScore">0</strong> монет.</p>
+    <button onclick="restartGame()">Играть снова</button>
+  </div>
+
+  <!-- Экран славы (Glory Road) -->
+  <div id="gloryRoad" class="glory-road" style="display: none;">
+    <h2>История прохождения</h2>
+    <div class="episodes">
+      <div class="episode">
+        <h3 class="episode-title">Эпизод 1: Светлые равнины</h3>
+        <div class="levels" id="episode1Levels"></div>
+      </div>
+      <div class="episode">
+        <h3 class="episode-title">Эпизод 2: Тёмные глубины</h3>
+        <div class="levels" id="episode2Levels"></div>
+      </div>
+    </div>
+    <button class="back-to-main-btn" onclick="saveAndReturnToMain()">Назад</button>
+  </div>
+
+  <!-- Магазин -->
+  <div id="shopScreen" class="shop-screen" style="display: none;">
+    <h2>Магазин</h2>
+    <div class="tab-buttons">
+      <button class="tab-btn active" id="tab-abilities" onclick="switchTab('abilities')">Способности</button>
+      <button class="tab-btn" id="tab-power" onclick="switchTab('power')">Сила</button>
+      <button class="bonus-tab-btn" id="tab-bonuses" onclick="switchTab('bonuses')">Бонусы</button>
+    </div>
+    <div id="shopItems"></div>
+    <button class="back-to-main-btn" onclick="saveAndReturnToMain()">Назад</button>
+  </div>
+
+  <!-- Экран сброса прогресса -->
+  <div id="resetScreen" class="reset-screen" style="display: none;">
+    <h2>Сброс прогресса</h2>
+    <p>Вы можете сбросить прогресс и начать заново, сохранив свой ранг.</p>
+    <p>Сбросов: <strong id="resetCount">0</strong></p>
+    <div class="tooltip-container">
+      <button class="reset-button" onclick="confirmReset()">Подтвердить сброс</button>
+      <div class="reset-tooltip" id="resetTooltip">Доступно на 10, 20, 30... рангах</div>
+    </div>
+    <button class="back-to-main-btn" onclick="cancelReset()">Отмена</button>
+  </div>
+
+  <!-- Уведомления -->
+  <div id="notification" class="notification"></div>
+
+  <!-- Аудио -->
+  <audio id="coinSound" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-game-ball-tap-2073.mp3" type="audio/mpeg" />
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-game-ball-tap-2073.ogg" type="audio/ogg" />
+    Ваш браузер не поддерживает аудио.
+  </audio>
+  <audio id="hitSound" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-boxing-punch-2051.mp3" type="audio/mpeg" />
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-boxing-punch-2051.ogg" type="audio/ogg" />
+    Ваш браузер не поддерживает аудио.
+  </audio>
+  <audio id="levelUpSound" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-948.mp3" type="audio/mpeg" />
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-948.ogg" type="audio/ogg" />
+    Ваш браузер не поддерживает аудио.
+  </audio>
+</body>
+</html>
